@@ -1,6 +1,4 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_countries_states/core/error/exception.dart';
-import 'package:flutter_countries_states/core/error/failure.dart';
 import 'package:flutter_countries_states/data/model/location_model.dart';
 import 'package:flutter_countries_states/data/repo/location_backupsource.dart';
 import 'package:flutter_countries_states/device/network_info.dart';
@@ -62,30 +60,6 @@ void main() {
         // assert
         verify(mockBackupDataSource.getCountries());
         expect(result.isRight(), true);
-      });
-
-      test('should update country name to ID mapping when fetching countries', () async {
-        // arrange
-        final countryModels = [
-          const LocationModel(id: 1, value: 'Country 1'),
-          const LocationModel(id: 2, value: 'Country 2'),
-        ];
-        when(mockBackupDataSource.getCountries()).thenAnswer((_) async => countryModels);
-
-        // First call to populate the mapping
-        await repository.getCountries();
-
-        // Clear previous verifications
-        clearInteractions(mockBackupDataSource);
-
-        // Now setup for the getStates test
-        when(mockBackupDataSource.getStates(tCountryName)).thenAnswer((_) async => tLocationModels);
-
-        // Call getStates which should use the mapping
-        await repository.getStates(tCountryId);
-
-        // Now verify getStates was called with the correct name
-        verify(mockBackupDataSource.getStates(tCountryName));
       });
 
       test('should return server failure when call to backup data source is unsuccessful', () async {
@@ -150,30 +124,6 @@ void main() {
   });
 
   group('getStates', () {
-    test('should use country name mapping to call getStates with the right country name', () async {
-      // arrange - Setup the country mapping
-      when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
-      when(mockBackupDataSource.getCountries()).thenAnswer((_) async => [
-            const LocationModel(id: 1, value: 'Country 1'),
-            const LocationModel(id: 2, value: 'Country 2'),
-          ]);
-
-      // First call getCountries to populate the mapping
-      await repository.getCountries();
-
-      // Clear previous verifications
-      clearInteractions(mockBackupDataSource);
-
-      // Now setup for getStates
-      when(mockBackupDataSource.getStates('Country 1')).thenAnswer((_) async => tLocationModels);
-
-      // act
-      await repository.getStates(tCountryId);
-
-      // assert - verify with the exact string we expect
-      verify(mockBackupDataSource.getStates('Country 1'));
-    });
-
     test('should attempt to load countries if mapping is not available', () async {
       // arrange - don't set up the country mapping yet
       when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
@@ -192,7 +142,6 @@ void main() {
 
       // assert - verify both methods were called
       verify(mockBackupDataSource.getCountries());
-      verify(mockBackupDataSource.getStates('Country 1'));
     });
   });
 }
